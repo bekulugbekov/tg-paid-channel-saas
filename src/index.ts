@@ -11,6 +11,8 @@ import { TelegramAccessService } from "./services/telegram-access.service";
 import { SubscriptionService } from "./services/subscription.service";
 import { PaymentService } from "./services/payment.service";
 import { setupExpireJob } from "./cron/expire.job";
+import { setupRemindersJob } from "./cron/reminders.job";
+import { setupCleanupJob } from "./cron/cleanup.job";
 
 async function main(): Promise<void> {
   logger.info({ env: config.NODE_ENV }, "Starting application");
@@ -20,20 +22,18 @@ async function main(): Promise<void> {
 
   const bot = new Bot<MyContext>(config.BOT_TOKEN);
 
-  const telegramAccess = new TelegramAccessService(bot.api);
-  const creatorService = new CreatorService(prisma);
+  const telegramAccess    = new TelegramAccessService(bot.api);
+  const creatorService    = new CreatorService(prisma);
   const subscriptionService = new SubscriptionService(prisma, telegramAccess);
-  const paymentService = new PaymentService(prisma, bot.api, telegramAccess);
+  const paymentService    = new PaymentService(prisma, bot.api, telegramAccess);
 
   registerHandlers(bot, { creatorService, subscriptionService, paymentService });
 
-  const app = createServer(paymentService);
+  const app = createServer({ paymentService, telegramAccess, db: prisma });
 
   if (config.PUBLIC_URL) {
-    // Production: webhook mode
     const webhookPath = `/bot/${config.BOT_TOKEN}`;
     app.use(webhookPath, webhookCallback(bot, "express"));
-
     await bot.api.setWebhook(`${config.PUBLIC_URL}${webhookPath}`, {
       allowed_updates: ["message", "callback_query", "my_chat_member", "chat_member"],
     });
@@ -48,7 +48,6 @@ async function main(): Promise<void> {
   });
 
   if (!config.PUBLIC_URL) {
-    // Development: long-polling mode
     void bot.start({
       allowed_updates: ["message", "callback_query", "my_chat_member", "chat_member"],
       onStart: (info) => logger.info({ username: info.username }, "Bot started (long-polling)"),
@@ -56,7 +55,9 @@ async function main(): Promise<void> {
   }
 
   setupExpireJob(bot, subscriptionService);
-  logger.info("Cron jobs registered");
+  setupRemindersJob(bot, prisma);
+  setupCleanupJob(prisma);
+  logger.info("Cron jobs registered (expire, reminders, cleanup)");
 
   const shutdown = async () => {
     logger.info("Shutting down...");
@@ -65,7 +66,7 @@ async function main(): Promise<void> {
     process.exit(0);
   };
 
-  process.once("SIGINT", () => void shutdown());
+  process.once("SIGINT",  () => void shutdown());
   process.once("SIGTERM", () => void shutdown());
 }
 
