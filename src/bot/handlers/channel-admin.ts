@@ -18,6 +18,19 @@ export function setupChannelAdminHandler(
 
     if (isNowAdmin && !wasAdmin) {
       try {
+        const canAdd = await creatorService.canAddChannel(BigInt(from.id));
+        if (!canAdd.allowed) {
+          await ctx.api.sendMessage(
+            from.id,
+            `⛔ Tarif chekloviga yetdingiz!\n\n` +
+              `Sizning tarifingizda maksimal *${canAdd.limit}* ta kanal ulash mumkin ` +
+              `(hozirda ${canAdd.current} ta).\n\n` +
+              `Tarif oshirish uchun platform administratoriga murojaat qiling.`,
+            { parse_mode: "Markdown" }
+          );
+          return;
+        }
+
         await creatorService.registerChannel(
           BigInt(from.id),
           BigInt(chat.id),

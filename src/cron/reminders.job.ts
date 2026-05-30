@@ -32,14 +32,13 @@ export function setupRemindersJob(bot: Bot<MyContext>, db: PrismaClient): Schedu
         const daysLeft = Math.ceil(msLeft / (24 * 60 * 60 * 1000));
 
         const keyboard = new InlineKeyboard()
-          .text("💳 Payme", `pay:payme:${sub.id}`)
-          .text("🟢 Click",  `pay:click:${sub.id}`);
+          .text("🔄 Yangilash", `renew:${sub.id}`);
 
         try {
           await bot.api.sendMessage(
             Number(sub.subscriber.telegramId),
             `⏰ Eslatma: *${sub.channel.title}* kanalidagi obunangiz ` +
-              `*${daysLeft} kunda* tugaydi!\n\nUzaytirish uchun to'lov usulini tanlang:`,
+              `*${daysLeft} kunda* tugaydi!\n\nObunani uzaytirish uchun tugmani bosing:`,
             { parse_mode: "Markdown", reply_markup: keyboard }
           );
           await new Promise(r => setTimeout(r, 150));

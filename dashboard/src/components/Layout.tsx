@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { api, type Creator } from "../api";
 
-const nav = [
+const baseNav = [
   { to: "/overview",    label: "📊 Overview" },
   { to: "/plans",       label: "📦 Tariflar" },
   { to: "/subscribers", label: "👥 Obunachilar" },
@@ -45,7 +45,7 @@ export default function Layout() {
           </p>
         </div>
         <nav className="flex-1 p-3 space-y-1">
-          {nav.map(({ to, label }) => (
+          {[...baseNav, ...(creator?.isAdmin ? [{ to: "/admin", label: "🛡️ Admin" }] : [])].map(({ to, label }) => (
             <NavLink
               key={to}
               to={to}

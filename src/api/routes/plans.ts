@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { AuthRequest, requireAuth } from "../middleware/auth";
+import { SAAS_LIMITS } from "../../lib/saas-limits";
 
 const createSchema = z.object({
   channelId:    z.string().min(1),
@@ -52,6 +53,20 @@ export function createPlansRouter(db: PrismaClient): Router {
     // Verify channel belongs to creator
     const channel = await db.channel.findFirst({ where: { id: parsed.data.channelId, creatorId } });
     if (!channel) return res.status(404).json({ error: "Channel not found" });
+
+    // SaaS plan limit check
+    const creator = await db.creator.findUnique({
+      where: { id: creatorId },
+      include: { _count: { select: { plans: { where: { isActive: true } } } } },
+    });
+    if (!creator) return res.status(404).json({ error: "Creator not found" });
+
+    const limit = SAAS_LIMITS[creator.saasPlan].plans;
+    if (creator._count.plans >= limit) {
+      return res.status(403).json({
+        error: `${creator.saasPlan} tarifida maksimal ${limit} ta tarif yaratish mumkin. Tarif oshirish uchun admin bilan bog'laning.`,
+      });
+    }
 
     const plan = await db.plan.create({
       data: { ...parsed.data, creatorId },

@@ -7,7 +7,8 @@ export function setupHelpCommand(bot: Bot<MyContext>): void {
       `ℹ️ Yordam\n\n` +
         `👤 Obunachi uchun:\n` +
         `/start — Botni ishga tushirish\n` +
-        `/status — Aktiv obunalaringiz\n\n` +
+        `/status — Aktiv obunalaringiz\n` +
+        `/renew — Obunani yangilash\n\n` +
         `👷 Creator uchun:\n` +
         `/creator — Kanal va tarif boshqaruvi\n\n` +
         `🔧 Admin uchun:\n` +

@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { api, type Stats, type Channel } from "../api";
+import { api, type Stats, type Channel, type Creator } from "../api";
+
+const PLAN_INFO: Record<string, { label: string; color: string; channels: number; plans: number }> = {
+  FREE:     { label: "FREE",     color: "bg-gray-100 text-gray-600",    channels: 1,   plans: 5   },
+  PRO:      { label: "PRO",      color: "bg-blue-100 text-blue-700",    channels: 3,   plans: 20  },
+  BUSINESS: { label: "BUSINESS", color: "bg-purple-100 text-purple-700", channels: 999, plans: 999 },
+};
 
 function StatCard({ icon, label, value, sub }: { icon: string; label: string; value: string; sub?: string }) {
   return (
@@ -19,11 +25,12 @@ function fmt(n: number) {
 export default function Overview() {
   const [stats,    setStats]    = useState<Stats | null>(null);
   const [channels, setChannels] = useState<Channel[]>([]);
+  const [creator,  setCreator]  = useState<Creator | null>(null);
   const [err,      setErr]      = useState("");
 
   useEffect(() => {
-    Promise.all([api.stats.get(), api.channels.list()])
-      .then(([s, c]) => { setStats(s); setChannels(c); })
+    Promise.all([api.stats.get(), api.channels.list(), api.me.get()])
+      .then(([s, c, me]) => { setStats(s); setChannels(c); setCreator(me); })
       .catch(e => setErr(e.message));
   }, []);
 
@@ -65,6 +72,32 @@ export default function Overview() {
           </table>
         </div>
       )}
+
+      {/* SaaS Plan */}
+      {creator && (() => {
+        const plan = PLAN_INFO[creator.saasPlan] ?? PLAN_INFO.FREE;
+        const channelCount = channels.filter(c => c.isActive).length;
+        return (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-8 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${plan.color}`}>
+                {plan.label}
+              </span>
+              <span className="text-sm text-gray-500">Sizning SaaS tarifingiz</span>
+            </div>
+            <div className="flex gap-6 text-sm text-gray-600">
+              <span>
+                📺 Kanallar: <strong>{channelCount}</strong>
+                {plan.channels < 999 && <span className="text-gray-400"> / {plan.channels}</span>}
+              </span>
+              <span>
+                📦 Tariflar: <strong>{stats?.planBreakdown.length ?? 0}</strong>
+                {plan.plans < 999 && <span className="text-gray-400"> / {plan.plans}</span>}
+              </span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Channels */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">

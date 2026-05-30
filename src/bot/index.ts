@@ -7,6 +7,7 @@ import { setupStartCommand } from "./commands/start";
 import { setupStatusCommand } from "./commands/status";
 import { setupCreatorCommand } from "./commands/creator";
 import { setupHelpCommand } from "./commands/help";
+import { setupRenewCommand } from "./commands/renew";
 import { setupTestSubCommand } from "./commands/test-sub";
 import { setupChannelAdminHandler } from "./handlers/channel-admin";
 import { setupSubscribeHandlers } from "./handlers/subscribe";
@@ -23,6 +24,7 @@ export function registerHandlers(bot: Bot<MyContext>, services: BotServices): vo
   setupStatusCommand(bot, services.subscriptionService);
   setupCreatorCommand(bot, services.creatorService);
   setupHelpCommand(bot);
+  setupRenewCommand(bot, services.subscriptionService);
   setupTestSubCommand(bot, services);
   setupChannelAdminHandler(bot, services.creatorService);
   setupSubscribeHandlers(bot, services.paymentService);

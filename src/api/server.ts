@@ -14,6 +14,7 @@ import { createPlansRouter }      from "./routes/plans";
 import { createSubscribersRouter } from "./routes/subscribers";
 import { createSettingsRouter }   from "./routes/settings";
 import { createStatsRouter }      from "./routes/stats";
+import { createAdminRouter }      from "./routes/admin";
 
 export interface AppServices {
   paymentService:  PaymentService;
@@ -46,6 +47,7 @@ export function createServer(services: AppServices) {
   app.use("/api/subscribers", createSubscribersRouter(db, telegramAccess));
   app.use("/api/settings",    createSettingsRouter(db));
   app.use("/api/stats",       createStatsRouter(db));
+  app.use("/api/admin",       createAdminRouter(db));
 
   // ── Dashboard static (production) ────────────────────────────────────────
   const dashDist = path.resolve(__dirname, "../../dashboard/dist");

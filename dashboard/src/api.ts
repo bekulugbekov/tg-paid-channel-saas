@@ -28,12 +28,44 @@ export interface Creator {
   firstName?: string;
   username?: string;
   saasPlan: string;
+  saasExpiresAt?: string | null;
   hasPayme: boolean;
   hasClick: boolean;
+  isAdmin?: boolean;
   paymeMerchantId?: string;
   clickServiceId?: string;
   clickMerchantId?: string;
   clickUserId?: string;
+}
+
+export interface AdminCreator {
+  id: string;
+  telegramId: string;
+  firstName?: string;
+  username?: string;
+  saasPlan: "FREE" | "PRO" | "BUSINESS";
+  saasExpiresAt: string | null;
+  createdAt: string;
+  channelCount: number;
+  planCount: number;
+  activeSubs: number;
+  totalRevenue: number;
+  hasPayme: boolean;
+  hasClick: boolean;
+}
+
+export interface AdminStats {
+  totalCreators: number;
+  totalChannels: number;
+  totalActiveSubs: number;
+  totalRevenue: number;
+}
+
+export interface AdminCreatorsPage {
+  creators: AdminCreator[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 export interface Channel {
@@ -110,5 +142,11 @@ export const api = {
   },
   stats: {
     get: () => get<Stats>("/api/stats"),
+  },
+  admin: {
+    stats:    ()                                          => get<AdminStats>("/api/admin/stats"),
+    creators: (page = 1, limit = 20)                     => get<AdminCreatorsPage>(`/api/admin/creators?page=${page}&limit=${limit}`),
+    setPlan:  (id: string, saasPlan: string, saasExpiresAt?: string | null) =>
+      req<AdminCreator>("PATCH", `/api/admin/creators/${id}/plan`, { saasPlan, saasExpiresAt }),
   },
 };

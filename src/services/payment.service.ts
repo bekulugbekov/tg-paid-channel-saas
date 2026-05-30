@@ -112,6 +112,13 @@ export class PaymentService {
     return `https://my.click.uz/services/pay?${qs.toString()}`;
   }
 
+  async getSubscriptionWithPlan(subscriptionId: string) {
+    return this.db.subscription.findUnique({
+      where: { id: subscriptionId },
+      include: { plan: true, subscriber: true },
+    });
+  }
+
   async getTransaction(transactionId: string) {
     return this.db.transaction.findUnique({
       where: { id: transactionId },

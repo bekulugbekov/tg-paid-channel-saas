@@ -104,4 +104,37 @@ export function setupSubscribeHandlers(bot: Bot<MyContext>, paymentService: Paym
       logger.error({ err: e, subscriptionId }, "pay:click callback error");
     }
   });
+
+  // ── Callback: renew:<subscriptionId> ────────────────────────────────
+  bot.callbackQuery(/^renew:(.+)$/, async (ctx) => {
+    await ctx.answerCallbackQuery();
+    if (!ctx.from) return;
+
+    const oldSubId = ctx.match[1];
+
+    try {
+      const oldSub = await paymentService.getSubscriptionWithPlan(oldSubId);
+      if (!oldSub) throw new Error("Obuna topilmadi");
+
+      const { subscription, plan } = await paymentService.createPendingSubscription({
+        subscriberTelegramId: BigInt(ctx.from.id),
+        planId: oldSub.planId,
+        username: ctx.from.username,
+        firstName: ctx.from.first_name,
+      });
+
+      const keyboard = new InlineKeyboard()
+        .text("💳 Payme", `pay:payme:${subscription.id}`)
+        .text("🟢 Click",  `pay:click:${subscription.id}`);
+
+      await ctx.reply(
+        `🔄 *${plan.name}* — yangilash\n💰 ${plan.priceUzs.toLocaleString()} so'm — ${plan.durationDays} kun\n\nTo'lov usulini tanlang:`,
+        { parse_mode: "Markdown", reply_markup: keyboard }
+      );
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Xato";
+      await ctx.reply(`❌ ${msg}`);
+      logger.error({ err: e, oldSubId }, "renew callback error");
+    }
+  });
 }

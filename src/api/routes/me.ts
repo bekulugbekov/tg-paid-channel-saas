@@ -1,6 +1,7 @@
 import { Router, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { AuthRequest, requireAuth } from "../middleware/auth";
+import { config } from "../../lib/config";
 
 export function createMeRouter(db: PrismaClient): Router {
   const router = Router();
@@ -27,11 +28,16 @@ export function createMeRouter(db: PrismaClient): Router {
     });
     if (!creator) return res.status(404).json({ error: "Creator not found" });
 
+    const isAdmin =
+      config.ADMIN_TELEGRAM_ID !== undefined &&
+      creator.telegramId === config.ADMIN_TELEGRAM_ID;
+
     return res.json({
       ...creator,
       telegramId: creator.telegramId.toString(),
       hasPayme: !!creator.paymeMerchantId,
       hasClick: !!creator.clickServiceId,
+      isAdmin,
     });
   });
 

@@ -1,4 +1,5 @@
 import { PrismaClient, Channel, Creator } from "@prisma/client";
+import { SAAS_LIMITS } from "../lib/saas-limits";
 
 export class CreatorService {
   constructor(private readonly db: PrismaClient) {}
@@ -53,5 +54,19 @@ export class CreatorService {
 
   async findChannelByTelegramId(telegramChannelId: bigint): Promise<Channel | null> {
     return this.db.channel.findUnique({ where: { telegramChannelId } });
+  }
+
+  async canAddChannel(
+    creatorTelegramId: bigint
+  ): Promise<{ allowed: boolean; current: number; limit: number }> {
+    const creator = await this.db.creator.findUnique({
+      where: { telegramId: creatorTelegramId },
+      include: { _count: { select: { channels: { where: { isActive: true } } } } },
+    });
+    if (!creator) return { allowed: true, current: 0, limit: SAAS_LIMITS.FREE.channels };
+
+    const limit = SAAS_LIMITS[creator.saasPlan].channels;
+    const current = creator._count.channels;
+    return { allowed: current < limit, current, limit };
   }
 }
