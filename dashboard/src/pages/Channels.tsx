@@ -17,7 +17,7 @@ export default function Channels() {
   if (err)     return <div className="p-8 text-red-500">Xato: {err}</div>;
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto">
       <h2 className="text-xl font-bold text-gray-800 mb-6">Kanallar</h2>
 
       {channels.length === 0 ? (
@@ -58,7 +58,8 @@ export default function Channels() {
                     href={ch.deepLink}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs text-blue-500 hover:underline"
+                    className="inline-flex items-center px-3 py-2 text-xs text-blue-500
+                               hover:underline min-h-[44px]"
                   >
                     Havola →
                   </a>

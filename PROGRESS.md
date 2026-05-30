@@ -242,13 +242,56 @@ dashboard/{vite.config.ts,tailwind.config.js,tsconfig.json,package.json}
 
 ---
 
+## ✅ Bosqich 9 — Dashboard mobil-responsiv (TUGALLANDI)
+
+**Commit:** (joriy)
+
+### Bajarildi:
+
+#### Layout.tsx — Hamburger drawer navigatsiya:
+- Desktop (lg+): sidebar o'zgarmagan
+- Mobil: sticky top header (h-14) + hamburger tugmasi
+- Drawer: `fixed inset-0 z-50`, backdrop + 64px panel, barcha nav linklari (min-h-[44px])
+- `flex flex-col lg:flex-row` tuzilmasiga o'tkazildi
+
+#### Jadvallar → Kartochka view (mobil):
+- **Subscribers.tsx**: `sm:hidden` kartochkalar + `hidden sm:block` jadval
+  - Har kartochkada: ism, @username, status badge, kanal/tarif, sanalar, Uzaytir/Chiqar tugmalari
+- **Plans.tsx**: `sm:hidden` kartochkalar + `hidden sm:block` jadval
+  - Har kartochkada: tarif nomi, kanal, narx·davom., tahrir/o'chir (min-h-[44px])
+- **Admin.tsx**: `sm:hidden` kartochkalar + `hidden sm:block` jadval
+  - Har kartochkada: creator, SaaS badge, kanallar/aktiv/daromad, to'lov holati, Tarif tugmasi
+
+#### Padding mobil uchun:
+- Barcha sahifalar: `p-8` → `p-4 md:p-8` + `mx-auto`
+- Form ichidagi padding ham sozlandi
+
+#### Input font-size iOS zoom oldini olish:
+- Settings, Plans, Admin modal: `text-sm` → `text-base sm:text-sm` (16px mobil)
+
+#### Touch target ≥44px:
+- Barcha tugmalar `min-h-[44px]` qo'shildi
+- Havola elementi `inline-flex items-center px-3 py-2 min-h-[44px]`
+
+#### Admin modal — bottom-sheet:
+- `items-center` → `items-end sm:items-center` (mobil'da pastdan chiqadi)
+- `rounded-2xl` → `rounded-t-2xl sm:rounded-2xl`
+
+#### Overview SaaS plan section:
+- `flex justify-between` → `flex flex-col sm:flex-row gap-3` (360px'da toshmas)
+
+#### Build natijasi:
+- `tsc --noEmit` dashboard: ✅ (0 xato)
+- `vite build`: ✅ (43 modul, 2.06s)
+
+---
+
 ## 🔜 Kelajakdagi kengaytmalar (ixtiyoriy)
 
 1. **Telegram Login Widget domen** — `@BotFather → /setdomain` production URL
 2. **`GetStatement` Payme** — to'liq per-creator implementatsiya
 3. **Webhook rejimi test** — ngrok + Payme/Click sandbox
-4. **Dashboard mobile responsive** — hozircha desktop-only
-5. **Unit/integration testlar** — jest + supertest
+4. **Unit/integration testlar** — jest + supertest
 
 ---
 

@@ -44,9 +44,11 @@ function PlanModal({ creator, onClose, onSave }: PlanModalProps) {
     }
   }
 
+  const inputCls = "w-full border border-gray-200 rounded-lg px-3 py-2 text-base sm:text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400";
+
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+    <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-sm p-6">
         <h3 className="text-lg font-semibold mb-1">Tarif o'zgartirish</h3>
         <p className="text-sm text-gray-500 mb-5">
           {creator.firstName ?? creator.username ?? creator.telegramId}
@@ -56,7 +58,7 @@ function PlanModal({ creator, onClose, onSave }: PlanModalProps) {
         <select
           value={plan}
           onChange={(e) => setPlan(e.target.value as "FREE" | "PRO" | "BUSINESS")}
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className={inputCls}
         >
           <option value="FREE">FREE — 1 kanal, 5 tarif</option>
           <option value="PRO">PRO — 3 kanal, 20 tarif</option>
@@ -70,7 +72,7 @@ function PlanModal({ creator, onClose, onSave }: PlanModalProps) {
           type="date"
           value={expiresAt}
           onChange={(e) => setExpiresAt(e.target.value)}
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className={inputCls}
         />
 
         {err && <p className="text-red-500 text-sm mb-3">{err}</p>}
@@ -78,14 +80,16 @@ function PlanModal({ creator, onClose, onSave }: PlanModalProps) {
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
+            className="flex-1 px-4 py-3 text-sm border border-gray-200 rounded-lg
+                       hover:bg-gray-50 min-h-[44px]"
           >
             Bekor qilish
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="flex-1 px-4 py-3 text-sm bg-blue-600 text-white rounded-lg
+                       hover:bg-blue-700 disabled:opacity-50 min-h-[44px]"
           >
             {saving ? "Saqlanmoqda..." : "Saqlash"}
           </button>
@@ -150,15 +154,15 @@ export default function Admin() {
   const totalPages = Math.ceil(total / 20);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <h2 className="text-xl font-bold text-gray-800 mb-6">🛡️ Platform Admin</h2>
 
       {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
           <StatCard label="Jami creatorlar" value={stats.totalCreators} />
-          <StatCard label="Faol kanallar"  value={stats.totalChannels} />
-          <StatCard label="Aktiv obunalar" value={stats.totalActiveSubs} />
+          <StatCard label="Faol kanallar"   value={stats.totalChannels} />
+          <StatCard label="Aktiv obunalar"  value={stats.totalActiveSubs} />
           <StatCard
             label="Jami daromad"
             value={`${stats.totalRevenue.toLocaleString()} so'm`}
@@ -166,15 +170,60 @@ export default function Admin() {
         </div>
       )}
 
-      {/* Creators table */}
+      {/* Creators */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-700">
-            Creatorlar ({total} ta)
-          </h3>
+          <h3 className="font-semibold text-gray-700">Creatorlar ({total} ta)</h3>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* ── Mobile cards (hidden on sm+) ─────────────────────── */}
+        <div className="sm:hidden divide-y divide-gray-100">
+          {creators.map((c) => (
+            <div key={c.id} className="p-4 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-medium text-gray-800 truncate">
+                    {c.firstName ?? c.username ?? "—"}
+                  </p>
+                  <p className="text-xs text-gray-400">@{c.username ?? c.telegramId}</p>
+                </div>
+                <button
+                  onClick={() => setEditing(c)}
+                  className="shrink-0 px-3 py-2 text-xs border border-gray-200 rounded-lg
+                             hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700
+                             min-h-[44px] transition-colors"
+                >
+                  Tarif
+                </button>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${PLAN_COLORS[c.saasPlan] ?? "bg-gray-100 text-gray-600"}`}>
+                  {c.saasPlan}
+                </span>
+                {c.saasExpiresAt && (
+                  <span className="text-xs text-gray-400">
+                    {new Date(c.saasExpiresAt).toLocaleDateString("ru-RU")}gacha
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600">
+                <span>📺 {c.channelCount} kanal</span>
+                <span>✅ {c.activeSubs} aktiv</span>
+                <span className="font-medium">💰 {c.totalRevenue.toLocaleString()} so'm</span>
+              </div>
+              <div className="text-sm">
+                {c.hasPayme && <span className="mr-2">💳 Payme</span>}
+                {c.hasClick && <span>🟢 Click</span>}
+                {!c.hasPayme && !c.hasClick && (
+                  <span className="text-orange-400 text-xs">⚠️ Merchant ulanmagan</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Desktop table (hidden on mobile) ─────────────────── */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
               <tr>
@@ -194,16 +243,10 @@ export default function Admin() {
                     <p className="font-medium text-gray-800">
                       {c.firstName ?? c.username ?? "—"}
                     </p>
-                    <p className="text-xs text-gray-400">
-                      @{c.username ?? c.telegramId}
-                    </p>
+                    <p className="text-xs text-gray-400">@{c.username ?? c.telegramId}</p>
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                        PLAN_COLORS[c.saasPlan] ?? "bg-gray-100 text-gray-600"
-                      }`}
-                    >
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${PLAN_COLORS[c.saasPlan] ?? "bg-gray-100 text-gray-600"}`}>
                       {c.saasPlan}
                     </span>
                     {c.saasExpiresAt && (
@@ -212,26 +255,22 @@ export default function Admin() {
                       </p>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-center text-gray-600">
-                    {c.channelCount}
-                  </td>
-                  <td className="px-4 py-3 text-center text-gray-600">
-                    {c.activeSubs}
-                  </td>
+                  <td className="px-4 py-3 text-center text-gray-600">{c.channelCount}</td>
+                  <td className="px-4 py-3 text-center text-gray-600">{c.activeSubs}</td>
                   <td className="px-4 py-3 text-right text-gray-700 font-medium">
                     {c.totalRevenue.toLocaleString()} so'm
                   </td>
                   <td className="px-4 py-3 text-center text-xs">
                     {c.hasPayme && <span className="mr-1">💳</span>}
                     {c.hasClick && <span>🟢</span>}
-                    {!c.hasPayme && !c.hasClick && (
-                      <span className="text-orange-400">⚠️</span>
-                    )}
+                    {!c.hasPayme && !c.hasClick && <span className="text-orange-400">⚠️</span>}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <button
                       onClick={() => setEditing(c)}
-                      className="px-3 py-1 text-xs border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-colors"
+                      className="px-3 py-1 text-xs border border-gray-200 rounded-lg
+                                 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700
+                                 transition-colors"
                     >
                       Tarif
                     </button>
@@ -250,17 +289,19 @@ export default function Admin() {
               <button
                 onClick={() => load(page - 1)}
                 disabled={page <= 1 || loading}
-                className="px-3 py-1 text-xs border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50"
+                className="px-3 py-2 text-xs border border-gray-200 rounded-lg
+                           disabled:opacity-40 hover:bg-gray-50 min-h-[44px]"
               >
                 ← Oldingi
               </button>
-              <span className="px-3 py-1 text-xs text-gray-500">
+              <span className="px-3 py-2 text-xs text-gray-500 flex items-center">
                 {page} / {totalPages}
               </span>
               <button
                 onClick={() => load(page + 1)}
                 disabled={page >= totalPages || loading}
-                className="px-3 py-1 text-xs border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50"
+                className="px-3 py-2 text-xs border border-gray-200 rounded-lg
+                           disabled:opacity-40 hover:bg-gray-50 min-h-[44px]"
               >
                 Keyingi →
               </button>

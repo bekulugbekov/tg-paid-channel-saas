@@ -44,7 +44,7 @@ export default function Settings() {
       .finally(() => setSaving(false));
   }
 
-  const inp = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300";
+  const inp = "w-full border border-gray-200 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-300";
   const field = (label: string, key: keyof typeof form, type = "text", placeholder = "") => (
     <div>
       <label className="text-xs text-gray-500 mb-1 block">{label}</label>
@@ -57,7 +57,7 @@ export default function Settings() {
   );
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-4 md:p-8 max-w-2xl mx-auto">
       <h2 className="text-xl font-bold text-gray-800 mb-6">Sozlamalar</h2>
 
       {/* Profile */}
@@ -116,7 +116,7 @@ export default function Settings() {
         <button
           onClick={save}
           disabled={saving}
-          className="mt-5 px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="mt-5 px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors min-h-[44px]"
         >
           {saving ? "Saqlanmoqda…" : "Saqlash"}
         </button>

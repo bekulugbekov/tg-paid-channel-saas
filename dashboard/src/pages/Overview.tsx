@@ -38,10 +38,10 @@ export default function Overview() {
   if (!stats) return <div className="p-8 text-gray-400">Yuklanmoqda…</div>;
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto">
       <h2 className="text-xl font-bold text-gray-800 mb-6">Umumiy ko'rsatkichlar</h2>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
         <StatCard icon="💰" label="Jami daromad"    value={fmt(stats.totalRevenue)} />
         <StatCard icon="📅" label="Bu oy daromad"   value={fmt(stats.monthlyRevenue)} />
         <StatCard icon="✅" label="Aktiv obunachilar" value={String(stats.activeSubscribersCount)} />
@@ -52,7 +52,8 @@ export default function Overview() {
       {stats.planBreakdown.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-8">
           <h3 className="font-semibold text-gray-700 mb-4">Tariflar bo'yicha</h3>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto -mx-5 px-5">
+          <table className="w-full text-sm min-w-[280px]">
             <thead>
               <tr className="text-left text-gray-400 border-b border-gray-100">
                 <th className="pb-2 font-medium">Tarif</th>
@@ -70,6 +71,7 @@ export default function Overview() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -78,14 +80,14 @@ export default function Overview() {
         const plan = PLAN_INFO[creator.saasPlan] ?? PLAN_INFO.FREE;
         const channelCount = channels.filter(c => c.isActive).length;
         return (
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-8 flex items-center justify-between">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-8 flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center gap-3">
               <span className={`px-3 py-1 rounded-full text-sm font-semibold ${plan.color}`}>
                 {plan.label}
               </span>
               <span className="text-sm text-gray-500">Sizning SaaS tarifingiz</span>
             </div>
-            <div className="flex gap-6 text-sm text-gray-600">
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-600 sm:ml-auto">
               <span>
                 📺 Kanallar: <strong>{channelCount}</strong>
                 {plan.channels < 999 && <span className="text-gray-400"> / {plan.channels}</span>}
