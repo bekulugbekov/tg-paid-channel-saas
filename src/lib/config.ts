@@ -13,7 +13,7 @@ const schema = z.object({
     z.string().url().optional()
   ),
   BOT_TOKEN: z.string().min(1, "BOT_TOKEN is required"),
-  BOT_USERNAME: z.string().optional(),
+  BOT_USERNAME: z.string().optional(), // Required for deep links (t.me/<BOT_USERNAME>?start=c_...)
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 chars"),
   ENCRYPTION_KEY: z

@@ -223,6 +223,25 @@ dashboard/{vite.config.ts,tailwind.config.js,tsconfig.json,package.json}
 
 ---
 
+## ✅ Bosqich 8 — To'liq audit (TUGALLANDI)
+
+**Commit:** (joriy)
+
+### Bajarildi (to'liqlik auditi — TZ §§4, 16, 18 barchasini KODNI O'QIB tekshirish):
+
+#### Natija: barcha talablar bajarilgan — F-01…F-22 ✅, S-01…S-09 ✅, AC barcha 10 ta ✅
+
+#### Topilgan va tuzatilgan:
+- **`src/api/routes/channels.ts:24`** — `process.env.BOT_USERNAME` o'rniga `config.BOT_USERNAME` ishlatildi (inconsistency fix)
+- **`src/lib/config.ts`** — `BOT_USERNAME` optional ekaniga comment qo'shildi (deep link uchun muhim)
+
+#### Build tasdiqlandi:
+- `tsc --noEmit` backend: ✅ (0 xato)
+- `tsc --noEmit` dashboard: ✅ (0 xato)
+- TODO/FIXME/dead code: topilmadi ✅
+
+---
+
 ## 🔜 Kelajakdagi kengaytmalar (ixtiyoriy)
 
 1. **Telegram Login Widget domen** — `@BotFather → /setdomain` production URL

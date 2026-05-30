@@ -1,6 +1,7 @@
 import { Router, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { AuthRequest, requireAuth } from "../middleware/auth";
+import { config } from "../../lib/config";
 
 export function createChannelsRouter(db: PrismaClient): Router {
   const router = Router();
@@ -21,7 +22,7 @@ export function createChannelsRouter(db: PrismaClient): Router {
       ...ch,
       telegramChannelId: ch.telegramChannelId.toString(),
       activeSubscribers: ch._count.subscriptions,
-      deepLink: `https://t.me/${process.env.BOT_USERNAME ?? ""}?start=c_${ch.telegramChannelId}`,
+      deepLink: `https://t.me/${config.BOT_USERNAME ?? ""}?start=c_${ch.telegramChannelId}`,
     })));
   });
 
