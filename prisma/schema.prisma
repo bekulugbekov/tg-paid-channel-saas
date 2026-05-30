@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Creator {
+  id              String    @id @default(cuid())
+  telegramId      BigInt    @unique
+  firstName       String?
+  username        String?
+  email           String?
+  paymeMerchantId String?
+  paymeKeyEnc     String?
+  clickServiceId  String?
+  clickMerchantId String?
+  clickSecretEnc  String?
+  clickUserId     String?
+  saasPlan        SaasPlan  @default(FREE)
+  saasExpiresAt   DateTime?
+  createdAt       DateTime  @default(now())
+
+  channels Channel[]
+  plans    Plan[]
+}
+
+enum SaasPlan {
+  FREE
+  PRO
+  BUSINESS
+}
+
+model Channel {
+  id                String   @id @default(cuid())
+  creatorId         String
+  telegramChannelId BigInt   @unique
+  title             String
+  description       String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+
+  creator       Creator        @relation(fields: [creatorId], references: [id])
+  plans         Plan[]
+  subscriptions Subscription[]
+}
+
+model Plan {
+  id           String   @id @default(cuid())
+  channelId    String
+  creatorId    String
+  name         String
+  priceUzs     Int
+  durationDays Int
+  description  String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  channel       Channel        @relation(fields: [channelId], references: [id])
+  creator       Creator        @relation(fields: [creatorId], references: [id])
+  subscriptions Subscription[]
+}
+
+model Subscriber {
+  id         String   @id @default(cuid())
+  telegramId BigInt   @unique
+  username   String?
+  firstName  String?
+  createdAt  DateTime @default(now())
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id           String    @id @default(cuid())
+  subscriberId String
+  planId       String
+  channelId    String
+  status       SubStatus @default(PENDING)
+  startedAt    DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  subscriber   Subscriber    @relation(fields: [subscriberId], references: [id])
+  plan         Plan          @relation(fields: [planId], references: [id])
+  channel      Channel       @relation(fields: [channelId], references: [id])
+  transactions Transaction[]
+  inviteLinks  InviteLink[]
+}
+
+enum SubStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+model Transaction {
+  id             String    @id @default(cuid())
+  subscriptionId String
+  provider       Provider
+  providerTxnId  String?
+  amountUzs      Int
+  state          TxnState  @default(CREATED)
+  createdAt      DateTime  @default(now())
+  paidAt         DateTime?
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id])
+
+  @@index([provider, providerTxnId])
+}
+
+enum Provider {
+  PAYME
+  CLICK
+}
+
+enum TxnState {
+  CREATED
+  PENDING
+  PAID
+  CANCELLED
+  FAILED
+}
+
+model InviteLink {
+  id             String    @id @default(cuid())
+  subscriptionId String
+  link           String
+  used           Boolean   @default(false)
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id])
+}
