@@ -24,8 +24,20 @@ model Creator {
   saasExpiresAt   DateTime?
   createdAt       DateTime  @default(now())
 
-  channels Channel[]
-  plans    Plan[]
+  channels     Channel[]
+  plans        Plan[]
+  loginTokens  LoginToken[]
+}
+
+model LoginToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  creatorId String
+  used      Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  creator Creator @relation(fields: [creatorId], references: [id])
 }
 
 enum SaasPlan {

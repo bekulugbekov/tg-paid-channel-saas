@@ -18,6 +18,13 @@ export function setupCleanupJob(db: PrismaClient): ScheduledTask {
       });
 
       if (count > 0) logger.info({ count }, "Stale transactions marked FAILED");
+
+      // Delete expired LoginTokens (older than 1 hour)
+      const tokenCutoff = new Date(Date.now() - 60 * 60 * 1000);
+      const { count: tokenCount } = await db.loginToken.deleteMany({
+        where: { expiresAt: { lt: tokenCutoff } },
+      });
+      if (tokenCount > 0) logger.info({ count: tokenCount }, "Expired login tokens deleted");
     } catch (err) {
       logger.error({ err }, "Error in cleanup job");
     }

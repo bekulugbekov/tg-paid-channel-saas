@@ -114,8 +114,9 @@ export interface Stats {
 
 export const api = {
   auth: {
-    login:  (user: Record<string, unknown>) => post<{ ok: boolean }>("/api/auth/telegram", user),
-    logout: ()                               => post<{ ok: boolean }>("/api/auth/logout"),
+    login:      (user: Record<string, unknown>) => post<{ ok: boolean }>("/api/auth/telegram", user),
+    magicLogin: (token: string)                 => post<{ ok: boolean }>("/api/auth/login", { token }),
+    logout:     ()                              => post<{ ok: boolean }>("/api/auth/logout"),
   },
   me: {
     get: () => get<Creator>("/api/me"),

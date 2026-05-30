@@ -89,33 +89,39 @@ export function createAuthRouter(db: PrismaClient): Router {
     res.json({ ok: true });
   });
 
-  // GET /api/auth/bot-login?token=<one-time-jwt>
-  // Bot /dashboard komandasi tomonidan generatsiya qilingan token'ni validatsiya qiladi
-  router.get("/bot-login", (req: Request, res: Response) => {
-    const raw = req.query.token;
-    if (typeof raw !== "string" || !raw) {
-      return res.status(400).json({ error: "Missing token" });
+  // POST /api/auth/login  — magic link token tekshiruvi (body: { token })
+  router.post("/login", async (req: Request, res: Response) => {
+    const { token } = req.body as { token?: string };
+    if (!token || typeof token !== "string") {
+      return res.status(400).json({ error: "Token kiritilmagan" });
     }
 
-    try {
-      const payload = jwt.verify(raw, config.JWT_SECRET) as { creatorId: string; type: string };
-      if (payload.type !== "bot_login") {
-        return res.status(403).json({ error: "Invalid token type" });
-      }
+    const record = await db.loginToken.findUnique({ where: { token } });
 
-      const token = jwt.sign({ creatorId: payload.creatorId }, config.JWT_SECRET, { expiresIn: "30d" });
-
-      res.cookie("token", token, {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: config.NODE_ENV === "production",
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-      });
-
-      return res.redirect("/");
-    } catch {
-      return res.status(403).json({ error: "Token invalid or expired" });
+    if (!record) {
+      return res.status(403).json({ error: "Token topilmadi yoki noto'g'ri" });
     }
+    if (record.used) {
+      return res.status(403).json({ error: "Bu havola allaqachon ishlatilgan" });
+    }
+    if (record.expiresAt < new Date()) {
+      return res.status(403).json({ error: "Havolaning muddati o'tgan. /dashboard buyrug'ini qayta yuboring" });
+    }
+
+    // Mark as used — one-time guarantee
+    await db.loginToken.update({ where: { id: record.id }, data: { used: true } });
+
+    const jwtToken = jwt.sign({ creatorId: record.creatorId }, config.JWT_SECRET, { expiresIn: "30d" });
+
+    res.cookie("token", jwtToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: config.NODE_ENV === "production",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    logger.info({ creatorId: record.creatorId }, "Magic link login successful");
+    return res.json({ ok: true });
   });
 
   return router;

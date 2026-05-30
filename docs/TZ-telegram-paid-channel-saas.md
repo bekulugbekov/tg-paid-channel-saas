@@ -3,9 +3,15 @@
 
 > **Hujjat maqsadi:** Ushbu TZ bevosita Claude Code (yoki boshqa AI coding agent) yordamida loyihani noldan qurish uchun mo'ljallangan. Har bir bo'lim aniq, bajariladigan talablar shaklida yozilgan.
 >
-> **Versiya:** 1.0 (MVP)
+> **Versiya:** 1.1
 > **Texnologiya yadrosi:** Node.js + TypeScript + grammY + PostgreSQL
 > **Til:** Bot interfeysi — o'zbekcha; kod va izohlar — inglizcha
+
+### Changelog
+| Versiya | Sana | O'zgartirish |
+|---------|------|--------------|
+| 1.1 | 2026-05-30 | §8 LoginToken modeli, §5.5 magic link oqimi, §12.2 asosiy usul magic link, §13 POST /auth/login endpoint |
+| 1.0 | 2026-05-30 | Dastlabki MVP TZ |
 
 ---
 
@@ -122,6 +128,25 @@ Platforma egasi (siz) daromadni quyidagicha oladi:
 3. Subscriber'ga eslatma + "Yangilash" tugmasini yuboradi
 ```
 
+### 5.5. Dashboard'ga kirish oqimi (magic link)
+```
+1. Creator botda /dashboard buyrug'ini yozadi
+2. Bot DB'da LoginToken yaratadi (random 32-bayt token, 5 daqiqa muddatli)
+3. Bot havolani yuboradi: {DASHBOARD_URL}/login?token=<token>
+4. Creator havolaga bosadi → /login sahifasi ochiladi
+5. Frontend URL'dan tokenni oladi, POST /api/auth/login { token } yuboradi
+6. Backend:
+   a. LoginToken'ni token qiymati bo'yicha topadi
+   b. used=false va expiresAt > now() tekshiradi
+   c. used=true qiladi (bir martalik!)
+   d. Creator'ni topadi, JWT httpOnly cookie beradi
+7. Frontend dashboard'ga (/overview) redirect qiladi
+```
+
+> **Xavfsizlik:** Token DB'da saqlanadi va bir martalik. JWT stateless token bilan farqi:
+> - Havola ikkinchi marta bosilsa → xato ("Token ishlatilgan yoki muddati o'tgan")
+> - 5 daqiqadan so'ng avtomatik eskiradi; eskirgan tokenlar cron tomonidan tozalanadi
+
 ### 5.4. Kanal ulash oqimi
 ```
 1. Creator botni o'z yopiq kanaliga admin qilib qo'shadi
@@ -226,6 +251,19 @@ model Creator {
 
   channels        Channel[]
   plans           Plan[]
+  loginTokens     LoginToken[]
+}
+
+// Dashboard'ga kirish uchun bir martalik magic link token
+model LoginToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  creatorId String
+  used      Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  creator   Creator  @relation(fields: [creatorId], references: [id])
 }
 
 enum SaasPlan { FREE PRO BUSINESS }
@@ -415,15 +453,24 @@ model InviteLink {
 - **Settings** — merchant kalitlari (Payme/Click), profil.
 
 ### 12.2. Autentifikatsiya
-- Telegram Login Widget ⟶ backend `initData` ni tekshiradi (HMAC-SHA256, bot token bilan).
-- Muvaffaqiyatdan keyin **JWT** (httpOnly cookie) beriladi.
+- **Asosiy usul — Magic link (bot orqali):**
+  1. Creator botda `/dashboard` yozadi
+  2. Bot 5 daqiqalik bir martalik token yaratadi (`LoginToken` jadvalida)
+  3. Bot `{DASHBOARD_URL}/login?token=<token>` havolasini yuboradi
+  4. `/login` sahifasi tokenni `POST /api/auth/login` ga yuboradi
+  5. Backend tokenni tekshirib, JWT httpOnly cookie beradi
+- **Muqobil usul — Telegram Login Widget:**
+  - `POST /api/auth/telegram` orqali HMAC-SHA256 tekshiruvi
+  - Hozirda `/login` sahifasida ham mavjud (fallback)
+- Muvaffaqiyatdan keyin **JWT** (httpOnly cookie, 30 kun) beriladi.
 
 ---
 
 ## 13. REST API (asosiy endpoint'lar)
 
 ```
-POST   /auth/telegram          -> Telegram login tekshiruvi, JWT
+POST   /auth/telegram          -> Telegram Login Widget tekshiruvi, JWT
+POST   /auth/login             -> Magic link token tekshiruvi, JWT (body: { token })
 GET    /me                     -> joriy creator profili
 GET    /channels               -> creator kanallari
 GET    /plans                  -> tariflar

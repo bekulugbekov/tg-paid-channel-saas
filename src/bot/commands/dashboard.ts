@@ -1,8 +1,10 @@
 import { Bot } from "grammy";
-import jwt from "jsonwebtoken";
+import { randomBytes } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 import { MyContext } from "../types";
 import { config } from "../../lib/config";
+
+const TOKEN_TTL_MS = 5 * 60 * 1000; // 5 daqiqa
 
 export function setupDashboardCommand(bot: Bot<MyContext>, db: PrismaClient): void {
   bot.command("dashboard", async (ctx) => {
@@ -21,19 +23,19 @@ export function setupDashboardCommand(bot: Bot<MyContext>, db: PrismaClient): vo
       return;
     }
 
-    // One-time token, 1 soat amal qiladi
-    const token = jwt.sign(
-      { creatorId: creator.id, type: "bot_login" },
-      config.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const token = randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
 
-    const loginUrl = `${config.DASHBOARD_URL}/api/auth/bot-login?token=${token}`;
+    await db.loginToken.create({
+      data: { token, creatorId: creator.id, expiresAt },
+    });
+
+    const loginUrl = `${config.DASHBOARD_URL}/login?token=${token}`;
 
     await ctx.reply(
       `🖥 *Dashboard kirish havolasi*\n\n` +
         `Quyidagi havola orqali dashboardga kiring:\n${loginUrl}\n\n` +
-        `⏳ Havola *1 soat* davomida amal qiladi.\n` +
+        `⏳ Havola *5 daqiqa* davomida amal qiladi va bir martalik.\n` +
         `🔒 Havolani hech kim bilan ulashmang.`,
       { parse_mode: "Markdown" }
     );

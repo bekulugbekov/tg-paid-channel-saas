@@ -152,6 +152,38 @@ dashboard/{vite.config.ts,tailwind.config.js,tsconfig.json,package.json}
 
 ---
 
+## ✅ Bosqich 6 — Magic link login (TUGALLANDI)
+
+**Commit:** (joriy)
+
+### TZ v1.1 yangilandi:
+- §8: `LoginToken` modeli hujjatlashtirildi
+- §5.5: Magic link oqimi qo'shildi
+- §12.2: Asosiy usul = magic link, muqobil = Telegram Login Widget
+- §13: `POST /auth/login` endpoint qo'shildi
+- Changelog jadvali qo'shildi
+
+### Prisma:
+- `LoginToken` modeli: `id, token @unique, creatorId, used, expiresAt, createdAt`
+- `Creator` modeliga `loginTokens LoginToken[]` relation qo'shildi
+- Migration: `20260530185402_add_login_token`
+
+### Backend (`src/`):
+- `src/bot/commands/dashboard.ts` — JWT o'rniga `randomBytes(32)` token, `LoginToken` DB'ga yoziladi, 5 daqiqalik TTL
+- `src/api/routes/auth.ts` — `POST /api/auth/login` { token }: mavjudlik + `used=false` + `expiresAt > now` tekshiruvi; `used=true` qilib JWT cookie beradi. Tushunarli o'zbek xato xabarlari.
+- `src/cron/cleanup.job.ts` — eskirgan `LoginToken`larni har 6 soatda tozalaydi
+
+### Frontend (`dashboard/src/`):
+- `api.ts` — `api.auth.magicLogin(token)` → `POST /api/auth/login` qo'shildi
+- `pages/Login.tsx` — URL'dan `?token=` oladi, `POST /api/auth/login` ga yuboradi; loading holati, aniq xato xabarlari, `/overview` redirect
+
+### Test natijalari (brauzerda tekshirildi):
+- ✅ Noto'g'ri token → "Token topilmadi yoki noto'g'ri"
+- ✅ To'g'ri token → login + `/overview` redirect
+- ✅ Ishlatilgan token qayta → "Bu havola allaqachon ishlatilgan"
+
+---
+
 ## 🔜 Kelajakdagi kengaytmalar (ixtiyoriy)
 
 1. **Telegram Login Widget domen** — `@BotFather → /setdomain` production URL
@@ -162,6 +194,12 @@ dashboard/{vite.config.ts,tailwind.config.js,tsconfig.json,package.json}
 
 ---
 
+## ⚠️ Muhim eslatmalar va texnik qarzlar
+
+- **`/api/auth/bot-login` (GET)** — oldingi sessiyada qo'shilgan edi, yangi `POST /api/auth/login` bilan almashtirildi. Eski havola endi ishlamaydi (bu maqsadli).
+- **Magic link URL**: `{DASHBOARD_URL}/login?token=<hex>` — frontend `/login` sahifasi
+- **Token TTL**: 5 daqiqa; eskirganlar cleanup.job.ts tomonidan tozalanadi
+
 ## ⚠️ Muhim eslatmalar
 
 - **Merchant kalitlar** faqat `settings` formasidan kiritiladi — `.env`'da emas (TZ §2.3)
@@ -170,6 +208,44 @@ dashboard/{vite.config.ts,tailwind.config.js,tsconfig.json,package.json}
 - **Production build**: `cd dashboard && npm run build` → `dashboard/dist/` → Express static tomonidan serve qilinadi
 
 ---
+
+## 🧪 Magic link login test qilish (Bosqich 6)
+
+### Bot orqali (haqiqiy oqim):
+```
+1. Bot bilan chat oching
+2. /dashboard yuboring
+3. Bot "Dashboard kirish havolasi" xabarini yuboradi (5 daqiqali havola)
+4. Havolaga bosing → /login?token=... sahifasi ochiladi
+5. Avtomatik POST /api/auth/login yuboriladi → /overview redirect
+6. Xuddi o'sha havolaga qayta bossangiz → "Bu havola allaqachon ishlatilgan"
+```
+
+### Curl orqali:
+```bash
+# Token yaratish (bot buyrug'i o'rniga bevosita)
+TOKEN=$(node -e "
+const {PrismaClient}=require('@prisma/client');
+const db=new PrismaClient();
+const c=require('crypto').randomBytes(32).toString('hex');
+db.creator.findFirst().then(cr=>
+  db.loginToken.create({data:{token:c,creatorId:cr.id,expiresAt:new Date(Date.now()+300000)}})
+).then(()=>{console.log(c);db.\$disconnect()});
+")
+
+# Login
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d "{\"token\":\"$TOKEN\"}" \
+  -c /tmp/cookies.txt
+# → {"ok":true}
+
+# Ikkinchi urinish
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d "{\"token\":\"$TOKEN\"}"
+# → {"error":"Bu havola allaqachon ishlatilgan"}
+```
 
 ## 🧪 Bosqich 4 yangi funksiyalarini test qilish
 
