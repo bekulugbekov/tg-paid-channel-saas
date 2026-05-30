@@ -286,6 +286,36 @@ dashboard/{vite.config.ts,tailwind.config.js,tsconfig.json,package.json}
 
 ---
 
+## ✅ Bosqich 10 — Production deploy artefaktlari (TUGALLANDI)
+
+**Commit:** (joriy)
+
+### Yaratilgan fayllar:
+
+| Fayl | Maqsad |
+|------|--------|
+| `Dockerfile` | Ko'p bosqichli build: dashboard → backend → production image |
+| `docker-entrypoint.sh` | `prisma migrate deploy` → `node dist/index.js` |
+| `docker-compose.prod.yml` | postgres + app + caddy (faqat 80/443 tashqaridan) |
+| `Caddyfile` | Let's Encrypt HTTPS, reverse proxy → app:3000 |
+| `.env.production.example` | Barcha o'zgaruvchilar, qiymatlar bo'sh |
+| `scripts/set-webhook.ts` | Telegram webhook'ni PUBLIC_URL ga o'rnatadi |
+| `scripts/backup.sh` | Kunlik pg_dump + 7 kun retention |
+| `DEPLOY.md` | To'liq qo'lda deploy runbook (14 qadam) |
+| `.gitignore` | `.env.production` himoya qo'shildi |
+
+### Arxitektura:
+- **Dockerfile** 3 bosqich: `dashboard-build` → `builder` → `production`
+- Production image: prod deps + prisma CLI (migrations uchun) + `dist/` + `dashboard/dist/`
+- Migratsiyalar entrypoint'da avtomatik bajariladi
+- PostgreSQL porti tashqaridan yopiq (faqat Docker ichki tarmoq)
+- Caddy Let's Encrypt sertifikatni avtomatik oladi
+
+### Build tekshiruvi:
+- `tsc --noEmit` backend: ✅ (0 xato)
+
+---
+
 ## 🔜 Kelajakdagi kengaytmalar (ixtiyoriy)
 
 1. **Telegram Login Widget domen** — `@BotFather → /setdomain` production URL

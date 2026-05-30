@@ -1,0 +1,16 @@
+# Replace yourdomain.com with your actual domain (same as PUBLIC_URL in .env.production)
+yourdomain.com {
+    # Compress responses
+    encode gzip
+
+    # Forward real client IP to Express (used by rate limiter)
+    header_up X-Real-IP {remote_host}
+    header_up X-Forwarded-For {remote_host}
+    header_up X-Forwarded-Proto {scheme}
+
+    # Reverse proxy everything to the Node.js app
+    # Express serves: static dashboard (/*), API (/api/*), payments (/payments/*), bot (/bot/*)
+    reverse_proxy app:3000
+
+    # Let's Encrypt TLS is configured automatically by Caddy
+}
