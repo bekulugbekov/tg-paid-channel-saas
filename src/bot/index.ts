@@ -1,4 +1,5 @@
 import { Bot } from "grammy";
+import { PrismaClient } from "@prisma/client";
 import { MyContext } from "./types";
 import { CreatorService } from "../services/creator.service";
 import { SubscriptionService } from "../services/subscription.service";
@@ -9,6 +10,7 @@ import { setupCreatorCommand } from "./commands/creator";
 import { setupHelpCommand } from "./commands/help";
 import { setupRenewCommand } from "./commands/renew";
 import { setupTestSubCommand } from "./commands/test-sub";
+import { setupDashboardCommand } from "./commands/dashboard";
 import { setupChannelAdminHandler } from "./handlers/channel-admin";
 import { setupSubscribeHandlers } from "./handlers/subscribe";
 import { logger } from "../lib/logger";
@@ -17,6 +19,7 @@ export interface BotServices {
   creatorService: CreatorService;
   subscriptionService: SubscriptionService;
   paymentService: PaymentService;
+  db: PrismaClient;
 }
 
 export function registerHandlers(bot: Bot<MyContext>, services: BotServices): void {
@@ -26,6 +29,7 @@ export function registerHandlers(bot: Bot<MyContext>, services: BotServices): vo
   setupHelpCommand(bot);
   setupRenewCommand(bot, services.subscriptionService);
   setupTestSubCommand(bot, services);
+  setupDashboardCommand(bot, services.db);
   setupChannelAdminHandler(bot, services.creatorService);
   setupSubscribeHandlers(bot, services.paymentService);
 

@@ -125,14 +125,40 @@ dashboard/{vite.config.ts,tailwind.config.js,tsconfig.json,package.json}
 
 ---
 
-## 🔜 Kelajakdagi kengaytmalar (MVP tayyor, ixtiyoriy)
+## ✅ Bosqich 5 — Audit tuzatishlari (TUGALLANDI)
 
-1. **Telegram Login Widget domen** — `@BotFather → /setdomain` orqali production URL qo'shish
-2. **`GetStatement` Payme** — to'liq implementatsiya
-3. **Rate limiting** — TZ S-06: `express-rate-limit` kutubxonasi
-4. **Webhook rejimi test** — ngrok + Payme/Click real sandbox webhook sinovi
-5. **`/dashboard` bot komandasi** — Telegram'dan dashboard'ga login havolasi (JWT one-time token)
-6. **Dashboard mobile responsive** — hozircha desktop-only
+**Commit:** (joriy)
+
+### Bajarildi (audit topilmalari):
+
+#### S-06 Rate limiting:
+- `express-rate-limit` o'rnatildi va `src/api/server.ts` ga qo'shildi
+- Umumiy API: 100 req / 15 daqiqa per IP
+- Auth endpoint: 10 req / 15 daqiqa per IP (qattiqroq)
+- To'lov webhook'lar rate-limit'siz (Payme/Click serverlaridan keladi)
+
+#### `/dashboard` bot komandasi (TZ §9.1):
+- `src/bot/commands/dashboard.ts` — creator'ni DB'dan topib, 1 soatlik JWT token generatsiya qiladi
+- `src/api/routes/auth.ts:GET /api/auth/bot-login` — tokenni validatsiya qilib, session cookie o'rnatadi va redirects qiladi
+- `help.ts` yangilandi
+
+#### F-06 Eslatma aniqligi:
+- `src/cron/reminders.job.ts` — endi **aynan 3 kun** (±12 soat) va **aynan 1 kun** (±12 soat) qolgan obunachilarni alohida topib, alohida yuboradi
+- Ilgari: 3-kunlik oynada har kuni yuborar edi (bir obunachi 3 ta xabar olishi mumkin edi)
+
+#### README:
+- Sarlavha "Bosqich 1" → "MVP" ga o'zgartirildi
+- Fayl strukturasi barcha bosqichlar uchun yangilandi
+
+---
+
+## 🔜 Kelajakdagi kengaytmalar (ixtiyoriy)
+
+1. **Telegram Login Widget domen** — `@BotFather → /setdomain` production URL
+2. **`GetStatement` Payme** — to'liq per-creator implementatsiya
+3. **Webhook rejimi test** — ngrok + Payme/Click sandbox
+4. **Dashboard mobile responsive** — hozircha desktop-only
+5. **Unit/integration testlar** — jest + supertest
 
 ---
 

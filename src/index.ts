@@ -27,7 +27,7 @@ async function main(): Promise<void> {
   const subscriptionService = new SubscriptionService(prisma, telegramAccess);
   const paymentService    = new PaymentService(prisma, bot.api, telegramAccess);
 
-  registerHandlers(bot, { creatorService, subscriptionService, paymentService });
+  registerHandlers(bot, { creatorService, subscriptionService, paymentService, db: prisma });
 
   const app = createServer({ paymentService, telegramAccess, db: prisma });
 

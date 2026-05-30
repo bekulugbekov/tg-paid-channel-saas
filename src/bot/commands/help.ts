@@ -10,7 +10,8 @@ export function setupHelpCommand(bot: Bot<MyContext>): void {
         `/status — Aktiv obunalaringiz\n` +
         `/renew — Obunani yangilash\n\n` +
         `👷 Creator uchun:\n` +
-        `/creator — Kanal va tarif boshqaruvi\n\n` +
+        `/creator — Kanal va tarif boshqaruvi\n` +
+        `/dashboard — Web dashboard'ga kirish havolasi\n\n` +
         `🔧 Admin uchun:\n` +
         `/testsub <channelId> <days> [userId] — Test obuna yaratish`
     );

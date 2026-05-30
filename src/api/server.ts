@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 import path from "node:path";
+import rateLimit from "express-rate-limit";
 import { PrismaClient } from "@prisma/client";
 import { logger } from "../lib/logger";
 import { PaymentService } from "../services/payment.service";
@@ -29,6 +30,24 @@ export function createServer(services: AppServices) {
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
   app.use(cookieParser());
+
+  // ── Rate limiting (S-06) ─────────────────────────────────────────────────
+  const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Too many requests, please try again later" },
+  });
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Too many auth attempts, please try again later" },
+  });
+  app.use("/api", apiLimiter);
+  app.use("/api/auth", authLimiter);
 
   // ── Health ───────────────────────────────────────────────────────────────
   app.get("/health", (_req: Request, res: Response) => {

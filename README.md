@@ -1,6 +1,7 @@
-# Telegram Pullik Kanal SaaS — Bosqich 1
+# Telegram Pullik Kanal SaaS — MVP
 
-Telegram kanallar uchun obuna boshqarish tizimi (to'lovsiz yadro).
+Telegram kanallar uchun to'liq avtomatlashtirilgan obuna boshqarish tizimi.
+Payme / Click orqali to'lov, dashboard, platform admin paneli.
 
 ## Texnologiyalar
 
@@ -128,39 +129,39 @@ Prisma Studio'da `Subscription` jadvaliga kirib, `expiresAt` ni o'tgan sana qili
 ```
 src/
 ├── bot/
-│   ├── index.ts              # Handler'larni ro'yxatdan o'tkazish
+│   ├── index.ts              # Handler ro'yxatdan o'tkazish
 │   ├── types.ts              # MyContext type
-│   ├── commands/
-│   │   ├── start.ts
-│   │   ├── status.ts
-│   │   ├── creator.ts
-│   │   ├── help.ts
-│   │   └── test-sub.ts       # Test obuna (admin/creator uchun)
+│   ├── commands/             # /start /status /creator /renew /dashboard /help /testsub
 │   └── handlers/
-│       └── channel-admin.ts  # my_chat_member handler
+│       ├── channel-admin.ts  # my_chat_member → kanal ro'yxatga olish
+│       └── subscribe.ts      # plan: / pay: / renew: callback'lar
+├── payments/
+│   ├── payme.router.ts       # JSON-RPC (Check/Create/Perform/Cancel/Check/GetStatement)
+│   └── click.router.ts       # Prepare + Complete + imzo tekshiruvi
 ├── services/
 │   ├── creator.service.ts
 │   ├── telegram-access.service.ts  # Invite link + kick
-│   └── subscription.service.ts
+│   ├── subscription.service.ts
+│   └── payment.service.ts    # To'lov oqimi, idempotentlik
 ├── cron/
-│   └── expire.job.ts         # Har soatda muddati tugaganlarni chiqaradi
+│   ├── expire.job.ts         # Har soatda muddati tugaganlarni chiqaradi
+│   ├── reminders.job.ts      # Har kuni 10:00 — 3 kun va 1 kun eslatma
+│   └── cleanup.job.ts        # Har 6 soatda stale tranzaksiyalarni FAILED qilish
 ├── api/
-│   └── server.ts             # Express app
+│   ├── server.ts             # Express app + rate-limiting
+│   ├── middleware/
+│   │   ├── auth.ts           # JWT httpOnly cookie
+│   │   └── admin-auth.ts     # Admin huquqini tekshirish
+│   └── routes/               # auth, me, channels, plans, subscribers, settings, stats, admin
 ├── lib/
 │   ├── config.ts             # Zod env validatsiya
 │   ├── prisma.ts             # PrismaClient singleton
 │   ├── logger.ts             # pino logger
-│   └── crypto.ts             # AES-256-GCM shifrlash
+│   ├── crypto.ts             # AES-256-GCM shifrlash
+│   └── saas-limits.ts        # FREE/PRO/BUSINESS tarif cheklovlari
 └── index.ts                  # Entry point
+dashboard/                    # React + Vite + Tailwind (Creator + Admin panel)
 ```
-
----
-
-## Keyingi bosqich (Bosqich 2)
-
-- Payme JSON-RPC webhook (CheckPerform / Create / Perform / Cancel)
-- Click Prepare/Complete webhook + imzo tekshiruvi
-- To'lov tasdiqlanganda avtomatik invite link
 
 ---
 

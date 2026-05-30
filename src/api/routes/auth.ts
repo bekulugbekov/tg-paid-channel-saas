@@ -89,5 +89,34 @@ export function createAuthRouter(db: PrismaClient): Router {
     res.json({ ok: true });
   });
 
+  // GET /api/auth/bot-login?token=<one-time-jwt>
+  // Bot /dashboard komandasi tomonidan generatsiya qilingan token'ni validatsiya qiladi
+  router.get("/bot-login", (req: Request, res: Response) => {
+    const raw = req.query.token;
+    if (typeof raw !== "string" || !raw) {
+      return res.status(400).json({ error: "Missing token" });
+    }
+
+    try {
+      const payload = jwt.verify(raw, config.JWT_SECRET) as { creatorId: string; type: string };
+      if (payload.type !== "bot_login") {
+        return res.status(403).json({ error: "Invalid token type" });
+      }
+
+      const token = jwt.sign({ creatorId: payload.creatorId }, config.JWT_SECRET, { expiresIn: "30d" });
+
+      res.cookie("token", token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: config.NODE_ENV === "production",
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
+
+      return res.redirect("/");
+    } catch {
+      return res.status(403).json({ error: "Token invalid or expired" });
+    }
+  });
+
   return router;
 }
