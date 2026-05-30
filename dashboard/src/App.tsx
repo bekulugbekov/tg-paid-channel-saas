@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login       from "./pages/Login";
 import Overview    from "./pages/Overview";
+import Channels    from "./pages/Channels";
 import Plans       from "./pages/Plans";
 import Subscribers from "./pages/Subscribers";
 import Settings    from "./pages/Settings";
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Navigate to="/overview" replace />} />
           <Route path="overview"    element={<Overview />} />
+          <Route path="channels"    element={<Channels />} />
           <Route path="plans"       element={<Plans />} />
           <Route path="subscribers" element={<Subscribers />} />
           <Route path="settings"    element={<Settings />} />

@@ -1,4 +1,4 @@
-import { Bot } from "grammy";
+import { Bot, InlineKeyboard } from "grammy";
 import { MyContext } from "../types";
 import { CreatorService } from "../../services/creator.service";
 
@@ -24,15 +24,23 @@ export function setupCreatorCommand(
       return;
     }
 
+    const keyboard = new InlineKeyboard();
+    for (const ch of channels) {
+      // encodeURIComponent so channel title is safe in callback data (max 64 bytes)
+      const titleSlug = encodeURIComponent(ch.title).slice(0, 30);
+      keyboard.text(`📦 ${ch.title}`, `fsm:plan:${ch.id}:${titleSlug}`).row();
+    }
+    keyboard.text("💳 Merchant sozlash", "fsm:merchant");
+
     const channelLines = channels
-      .map((ch) => `• ${ch.title}\n  ID: \`${ch.telegramChannelId}\``)
-      .join("\n\n");
+      .map((ch) => `• ${ch.title}  (\`${ch.telegramChannelId}\`)`)
+      .join("\n");
 
     await ctx.reply(
       `🔧 Creator paneli\n\n` +
-        `Ulangan kanallar (${channels.length}):\n\n${channelLines}\n\n` +
-        `Test obuna yaratish: /testsub <channelId> <days>`,
-      { parse_mode: "Markdown" }
+        `Ulangan kanallar (${channels.length}):\n${channelLines}\n\n` +
+        `Quyidagi tugmalar orqali tarif yarating yoki to'lov sozlamalarini o'rnating:`,
+      { parse_mode: "Markdown", reply_markup: keyboard }
     );
   });
 }

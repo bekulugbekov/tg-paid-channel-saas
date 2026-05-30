@@ -184,6 +184,45 @@ dashboard/{vite.config.ts,tailwind.config.js,tsconfig.json,package.json}
 
 ---
 
+## ✅ Bosqich 7 — Audit tuzatishlari (TUGALLANDI)
+
+**Commit:** (joriy)
+
+### Bajarildi (to'liqlik auditi topilmalari):
+
+#### ⚠️ F-07 /renew muddat hisoblash bugi tuzatildi:
+- `src/services/payment.service.ts:activateAfterPayment` — yangi sub ACTIVE bo'lganda, avval o'sha kanal uchun mavjud ACTIVE sub bor-yo'qligini tekshiradi
+- Agar bor bo'lsa: yangi sub `startedAt = eski sub.expiresAt`, ya'ni eski sub tugagandan KEYIN boshlanadi
+- Bot xabarida yozilgan "Yangi muddad eski obuna tugagandan keyin boshlanadi" endi haqiqiy
+
+#### ❌ TZ §9.3 Bot FSM Conversations implement qilindi:
+- `src/bot/fsm/state.ts` — FsmState (PlanState | MerchantState) in-memory store
+- `src/bot/fsm/plan.ts` — 4-bosqichli tarif yaratish: nom → narx → davomiylik → tavsif → tasdiqlash
+  - `fsm:plan:<channelId>:<title>` callback orqali ishga tushadi
+  - `fsm:confirm_plan` va `fsm:cancel` callbacklar
+  - SAAS limit tekshiruvi (FREE: 5 ta plan)
+- `src/bot/fsm/merchant.ts` — Merchant kalitlari bot orqali kiritish:
+  - Provider tanlash: Payme / Click / Ikkalasi
+  - Barcha kalitlar kiritilgach AES-256-GCM bilan shifrlanib saqlanadi
+  - **S-08**: har bir kalit kiritilgandan so'ng `ctx.api.deleteMessage()` chaqiriladi
+- `src/bot/commands/creator.ts` — yangilandi: har kanal uchun "📦 Tarif yaratish" tugmasi + "💳 Merchant sozlash" tugmasi
+- `src/bot/index.ts` — FSM handlerlari ro'yxatga olindi; `fsm:cancel` global; `message:text` handler FSM holat bo'lganda ishlaydi
+
+#### ⚠️ Dashboard Channels sahifasi qo'shildi (TZ §12.1):
+- `dashboard/src/pages/Channels.tsx` — kanal kartalari, tariflar, obunachi soni, deep link
+- `dashboard/src/App.tsx` — `/channels` route qo'shildi
+- `dashboard/src/components/Layout.tsx` — "📢 Kanallar" nav linki qo'shildi
+
+#### ⚠️ GetStatement Payme implement qilindi (TZ §10.1):
+- `src/services/payment.service.ts:getStatementTransactions` — auth header bo'yicha creator topib, uning PAYME tranzaksiyalarini qaytaradi
+- `src/payments/payme.router.ts:GetStatement` — `from`/`to` parametrlar bo'yicha filtrlash, to'liq response format
+
+### Build natijasi:
+- `tsc --noEmit` backend: ✅
+- `tsc --noEmit` dashboard: ✅
+
+---
+
 ## 🔜 Kelajakdagi kengaytmalar (ixtiyoriy)
 
 1. **Telegram Login Widget domen** — `@BotFather → /setdomain` production URL

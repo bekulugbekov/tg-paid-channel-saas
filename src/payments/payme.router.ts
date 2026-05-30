@@ -228,9 +228,29 @@ export function createPaymeRouter(svc: PaymentService): Router {
         }
 
         // ────────────────────────────────────────────────────────────────
-        case "GetStatement":
-          // Stub: Payme reconciliation (full per-creator filter requires index on key hash)
-          return res.json(ok(rpcId, { transactions: [] }));
+        case "GetStatement": {
+          const fromMs = Number(params.from);
+          const toMs   = Number(params.to);
+          if (!fromMs || !toMs) return res.json(err(rpcId, ERR.INVALID_REQ));
+
+          const txns = await svc.getStatementTransactions(req.headers.authorization, fromMs, toMs);
+          if (txns === null) return res.json(err(rpcId, ERR.AUTH_FAILED));
+
+          return res.json(ok(rpcId, {
+            transactions: txns.map((t) => ({
+              id:           t.id,
+              time:         t.createdAt.getTime(),
+              amount:       t.amountUzs * 100,
+              account:      { order_id: t.id },
+              create_time:  t.createdAt.getTime(),
+              perform_time: t.paidAt?.getTime()      ?? 0,
+              cancel_time:  t.cancelledAt?.getTime() ?? 0,
+              transaction:  t.id,
+              state:        toPaymeState(t.state),
+              reason:       t.cancelReason ?? null,
+            })),
+          }));
+        }
 
         default:
           return res.json(err(rpcId, ERR.METHOD_NOT_FOUND));

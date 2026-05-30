@@ -4,6 +4,7 @@ import { api, type Creator } from "../api";
 
 const baseNav = [
   { to: "/overview",    label: "📊 Overview" },
+  { to: "/channels",    label: "📢 Kanallar" },
   { to: "/plans",       label: "📦 Tariflar" },
   { to: "/subscribers", label: "👥 Obunachilar" },
   { to: "/settings",    label: "⚙️ Sozlamalar" },

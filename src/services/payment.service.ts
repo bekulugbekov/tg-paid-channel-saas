@@ -165,7 +165,22 @@ export class PaymentService {
 
     const now = new Date();
     const durationDays = txn.subscription.plan.durationDays;
-    const expiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+
+    // If subscriber already has an ACTIVE sub for this channel (renewal case),
+    // start the new period from that sub's end date so time isn't wasted.
+    const existingActive = await this.db.subscription.findFirst({
+      where: {
+        channelId: txn.subscription.channelId,
+        subscriberId: txn.subscription.subscriberId,
+        status: SubStatus.ACTIVE,
+        id: { not: txn.subscriptionId },
+      },
+      orderBy: { expiresAt: "desc" },
+    });
+    const base = existingActive?.expiresAt && existingActive.expiresAt > now
+      ? existingActive.expiresAt
+      : now;
+    const expiresAt = new Date(base.getTime() + durationDays * 24 * 60 * 60 * 1000);
 
     await this.db.$transaction([
       this.db.transaction.update({
@@ -208,6 +223,34 @@ export class PaymentService {
     } catch (e) {
       logger.error({ err: e, transactionId }, "Invite link send failed — user may not have started bot");
     }
+  }
+
+  async getStatementTransactions(
+    authHeader: string | undefined,
+    fromMs: number,
+    toMs: number
+  ) {
+    const creators = await this.db.creator.findMany({
+      where: { paymeKeyEnc: { not: null } },
+      select: { id: true, paymeKeyEnc: true },
+    });
+
+    let creatorId: string | null = null;
+    for (const c of creators) {
+      if (c.paymeKeyEnc && this.verifyPaymeAuth(authHeader, c.paymeKeyEnc)) {
+        creatorId = c.id;
+        break;
+      }
+    }
+    if (!creatorId) return null;
+
+    return this.db.transaction.findMany({
+      where: {
+        provider: "PAYME" as const,
+        createdAt: { gte: new Date(fromMs), lte: new Date(toMs) },
+        subscription: { plan: { channel: { creatorId } } },
+      },
+    });
   }
 
   async cancelTransaction(transactionId: string, cancelReason: number): Promise<void> {
