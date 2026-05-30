@@ -9,6 +9,7 @@ import { createServer } from "./api/server";
 import { CreatorService } from "./services/creator.service";
 import { TelegramAccessService } from "./services/telegram-access.service";
 import { SubscriptionService } from "./services/subscription.service";
+import { PaymentService } from "./services/payment.service";
 import { setupExpireJob } from "./cron/expire.job";
 
 async function main(): Promise<void> {
@@ -22,10 +23,11 @@ async function main(): Promise<void> {
   const telegramAccess = new TelegramAccessService(bot.api);
   const creatorService = new CreatorService(prisma);
   const subscriptionService = new SubscriptionService(prisma, telegramAccess);
+  const paymentService = new PaymentService(prisma, bot.api, telegramAccess);
 
-  registerHandlers(bot, { creatorService, subscriptionService });
+  registerHandlers(bot, { creatorService, subscriptionService, paymentService });
 
-  const app = createServer();
+  const app = createServer(paymentService);
 
   if (config.PUBLIC_URL) {
     // Production: webhook mode

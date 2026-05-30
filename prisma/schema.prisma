@@ -107,10 +107,12 @@ model Transaction {
   state          TxnState  @default(CREATED)
   createdAt      DateTime  @default(now())
   paidAt         DateTime?
+  cancelledAt    DateTime?
+  cancelReason   Int?
 
   subscription Subscription @relation(fields: [subscriptionId], references: [id])
 
-  @@index([provider, providerTxnId])
+  @@unique([provider, providerTxnId])
 }
 
 enum Provider {
