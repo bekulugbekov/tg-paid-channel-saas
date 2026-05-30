@@ -91,27 +91,48 @@ dashboard/{vite.config.ts,tailwind.config.js,tsconfig.json,package.json}
 
 ---
 
-## 🔜 Bosqich 4 — Polish (keyingi)
+## ✅ Bosqich 4 — Yakuniy sayqal (TUGALLANDI)
 
-TZ §4, §17 asosida:
+**Commit:** `82711aa`
 
-### To'liq to'g'rilash kerak bo'lganlar:
+### Bajarildi:
+
+#### `/renew` oqimi (TZ F-06, F-07):
+- `src/bot/commands/renew.ts` — `/renew` komandasi: aktiv obunalarni ko'rsatadi, `renew:<subId>` tugmalar
+- `src/bot/handlers/subscribe.ts` — `renew:` callback: eski plan asosida yangi PENDING sub yaratadi → to'lov tugmalari
+- `src/cron/reminders.job.ts` — eslatma tugmasi `pay:payme/click:` o'rniga `renew:` (to'g'ri yangilash oqimi)
+- `PaymentService.getSubscriptionWithPlan()` — yangi helper metod
+
+#### SaaS tariflar cheklovlari (TZ §2.1):
+- `src/lib/saas-limits.ts` — `FREE: 1ch/5pl`, `PRO: 3ch/20pl`, `BUSINESS: unlimited`
+- `POST /api/plans` — tarif yaratishda SaaS limit tekshiruvi (HTTP 403 agar oshsa)
+- `CreatorService.canAddChannel()` — bot kanal ulashdan oldin limit tekshiruvi
+- `channel-admin.ts` — limitga yetganda foydalanuvchiga xabar yuboradi
+
+#### Platform admin panel (TZ §4.3, F-20, F-21, F-22):
+- `src/api/middleware/admin-auth.ts` — `requireAdmin()`: JWT auth + `ADMIN_TELEGRAM_ID` tekshiruvi
+- `GET  /api/admin/stats` — jami: creators, channels, active subs, revenue
+- `GET  /api/admin/creators` — sahifalangan ro'yxat (per-creator: kanallar, obunalar, daromad)
+- `PATCH /api/admin/creators/:id/plan` — saasPlan + saasExpiresAt o'zgartirish
+- `GET /api/me` — `isAdmin: boolean` maydon qo'shildi
+- `dashboard/src/pages/Admin.tsx` — stat kartalar + creator jadvali + tarif o'zgartirish modali
+- `Layout.tsx` — admin nav linki (faqat `isAdmin=true` bo'lganda ko'rinadi)
+- `Overview.tsx` — SaaS plan badge + kanal/tarif ishlatilish hisoblagichi
+
+#### cleanupPending cron — Bosqich 3 da allaqachon mavjud (`src/cron/cleanup.job.ts`)
+
+---
+
+---
+
+## 🔜 Kelajakdagi kengaytmalar (MVP tayyor, ixtiyoriy)
+
 1. **Telegram Login Widget domen** — `@BotFather → /setdomain` orqali production URL qo'shish
-2. **`/renew` komandasi** — TZ F-07: obunani yangilash oqimi (yangi to'lov sikli)
-3. **`GetStatement` Payme** — to'liq implementatsiya (paymeKey hash saqlash yoki per-creator endpoint)
-4. **Bot FSM — plan yaratish** — Creator bot orqali tarif yaratsin (grammY `conversations` plugin)
-5. **Bot FSM — merchant kalitlari** — Bot orqali Payme/Click kalitlarini kiritish, xabarni o'chirish (TZ S-08)
-6. **Rate limiting** — TZ S-06: `express-rate-limit` kutubxonasi
-7. **SaaS tariflar** — Platform admin paneli, FREE/PRO/BUSINESS cheklovlar
-8. **Platform admin paneli** — TZ §4.3: barcha creatorlar, statistika, tarif boshqaruvi
-9. **Webhook rejimi test** — ngrok + Payme/Click real sandbox webhook sinovi
-10. **`/dashboard` bot komandasi** — Telegram'dan dashboard'ga login havolasi (JWT one-time token)
-
-### Texnik qarz:
-- `markTransactionPending` — concurrent CreateTransaction uchun upsert kerak
-- Subscriber taraf `/start` oqimi ko'proq polish (kanal ma'lumotlari, obuna holati)
-- Dashboard mobile responsive (hozircha desktop-only)
-- API error handling frontend'da aniqroq xabarlar
+2. **`GetStatement` Payme** — to'liq implementatsiya
+3. **Rate limiting** — TZ S-06: `express-rate-limit` kutubxonasi
+4. **Webhook rejimi test** — ngrok + Payme/Click real sandbox webhook sinovi
+5. **`/dashboard` bot komandasi** — Telegram'dan dashboard'ga login havolasi (JWT one-time token)
+6. **Dashboard mobile responsive** — hozircha desktop-only
 
 ---
 
@@ -124,7 +145,40 @@ TZ §4, §17 asosida:
 
 ---
 
-## 🧪 Lokalda qanday test qilinadi
+## 🧪 Bosqich 4 yangi funksiyalarini test qilish
+
+### /renew oqimi:
+```
+1. Bot'da /start c_<channelTgId> → tarif tanla → to'lov qil → ACTIVE obuna
+2. Bot'da /renew → obuna ko'rinadi "🔄 Kanal nomi (dd.mm.yyyygacha)"
+3. "🔄 Yangilash" tugmasini bosing → yangi PENDING sub yaratiladi
+4. pay:payme yoki pay:click → to'lov havolasi
+```
+
+### SaaS limitlar:
+```bash
+# Creator FREE tarifda → 1 ta kanaldan ortiq ulashga urinish
+# Bot "⛔ Tarif chekloviga yetdingiz!" deb xabar yuboradi
+
+# API orqali 6-chi plan yaratishga urinish (FREE: 5 ta limit)
+curl -X POST http://localhost:3000/api/plans -b cookies.txt \
+  -H "Content-Type: application/json" \
+  -d '{"channelId":"...","name":"Extra","priceUzs":10000,"durationDays":30}'
+# → HTTP 403: "FREE tarifida maksimal 5 ta tarif..."
+```
+
+### Admin panel:
+```bash
+# .env da ADMIN_TELEGRAM_ID=<sizning_telegram_id>
+# Dashboard'ga kiring → sidebar'da "🛡️ Admin" ko'rinadi
+# GET /api/admin/stats → {"totalCreators":N,"totalChannels":N,...}
+# GET /api/admin/creators → creatorlar ro'yxati
+
+# Plan o'zgartirish
+curl -X PATCH http://localhost:3000/api/admin/creators/<id>/plan -b cookies.txt \
+  -H "Content-Type: application/json" \
+  -d '{"saasPlan":"PRO","saasExpiresAt":"2025-12-31T00:00:00.000Z"}'
+```
 
 ### Backend:
 ```bash
