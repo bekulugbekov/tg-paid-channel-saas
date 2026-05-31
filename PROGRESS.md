@@ -324,23 +324,11 @@ dashboard/{vite.config.ts,tailwind.config.js,tsconfig.json,package.json}
 - **Docker**: v28.1.1 o'rnatildi ✅
 - **PostgreSQL container**: Healthy ✅
 - **App container**: Healthy ✅ (migratsiyalar o'tdi)
-- **Caddy container**: ✅ Tuzatildi — `header_up` `reverse_proxy {}` ichiga ko'chirildi
+- **Caddy container**: ✅ Ishlayapti — Let's Encrypt sertifikat olindi
+- **HTTPS**: ✅ `https://92-5-5-101.sslip.io` — `{"status":"ok"}` qaytaryapti
+- **HTTP→HTTPS redirect**: ✅ 308 Permanent Redirect
 
-### ✅ Caddyfile xatosi tuzatildi:
-
-**Xato edi:** `unrecognized directive: header_up` (Caddyfile:7)  
-**Sabab:** `header_up` `reverse_proxy` tashqarisida yozilgan edi.  
-**Tuzatish:** `header_up` direktivlari `reverse_proxy app:3000 { ... }` bloki ichiga ko'chirildi.
-
-Serverdagi fayl yangilash:
-```bash
-cd /opt/tg-saas
-git pull   # yoki nano Caddyfile bilan qo'lda yangilang
-docker compose -f docker-compose.prod.yml --env-file .env.production restart caddy
-curl http://92-5-5-101.sslip.io/health
-```
-
-### Webhook o'rnatish (Caddyfile tuzatilgandan keyin):
+### ✅ Keyingi qadam — Webhook o'rnatish:
 ```bash
 docker compose -f docker-compose.prod.yml --env-file .env.production exec app \
   node -e "
