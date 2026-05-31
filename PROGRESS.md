@@ -324,33 +324,18 @@ dashboard/{vite.config.ts,tailwind.config.js,tsconfig.json,package.json}
 - **Docker**: v28.1.1 o'rnatildi ✅
 - **PostgreSQL container**: Healthy ✅
 - **App container**: Healthy ✅ (migratsiyalar o'tdi)
-- **Caddy container**: ⚠️ Restarting — Caddyfile xatosi
+- **Caddy container**: ✅ Tuzatildi — `header_up` `reverse_proxy {}` ichiga ko'chirildi
 
-### ⚠️ HOZIR TUZATILISHI KERAK — Caddyfile xatosi:
+### ✅ Caddyfile xatosi tuzatildi:
 
-**Xato:** `unrecognized directive: header_up` (Caddyfile:7)
+**Xato edi:** `unrecognized directive: header_up` (Caddyfile:7)  
+**Sabab:** `header_up` `reverse_proxy` tashqarisida yozilgan edi.  
+**Tuzatish:** `header_up` direktivlari `reverse_proxy app:3000 { ... }` bloki ichiga ko'chirildi.
 
-**Sabab:** `header_up` `reverse_proxy` tashqarisida yozilgan.
-
-**Tuzatish** (serverda):
-```bash
-nano /opt/tg-saas/Caddyfile
-```
-
-Caddyfile to'g'ri ko'rinishi:
-```
-92-5-5-101.sslip.io {
-    encode gzip
-    reverse_proxy app:3000 {
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-Proto {scheme}
-    }
-}
-```
-
-Keyin:
+Serverdagi fayl yangilash:
 ```bash
 cd /opt/tg-saas
+git pull   # yoki nano Caddyfile bilan qo'lda yangilang
 docker compose -f docker-compose.prod.yml --env-file .env.production restart caddy
 curl http://92-5-5-101.sslip.io/health
 ```
