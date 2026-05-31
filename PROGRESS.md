@@ -316,6 +316,65 @@ dashboard/{vite.config.ts,tailwind.config.js,tsconfig.json,package.json}
 
 ---
 
+## ✅ Bosqich 11 — Production server deploy (JARAYONDA)
+
+### Server holati (2026-05-31):
+- **VPS**: Oracle Cloud Free Tier — Ubuntu 20.04, VM.Standard.E2.1.Micro, IP: `92.5.5.101`
+- **Domain**: `92-5-5-101.sslip.io` (bepul subdomen, Let's Encrypt SSL)
+- **Docker**: v28.1.1 o'rnatildi ✅
+- **PostgreSQL container**: Healthy ✅
+- **App container**: Healthy ✅ (migratsiyalar o'tdi)
+- **Caddy container**: ⚠️ Restarting — Caddyfile xatosi
+
+### ⚠️ HOZIR TUZATILISHI KERAK — Caddyfile xatosi:
+
+**Xato:** `unrecognized directive: header_up` (Caddyfile:7)
+
+**Sabab:** `header_up` `reverse_proxy` tashqarisida yozilgan.
+
+**Tuzatish** (serverda):
+```bash
+nano /opt/tg-saas/Caddyfile
+```
+
+Caddyfile to'g'ri ko'rinishi:
+```
+92-5-5-101.sslip.io {
+    encode gzip
+    reverse_proxy app:3000 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
+```
+
+Keyin:
+```bash
+cd /opt/tg-saas
+docker compose -f docker-compose.prod.yml --env-file .env.production restart caddy
+curl http://92-5-5-101.sslip.io/health
+```
+
+### Webhook o'rnatish (Caddyfile tuzatilgandan keyin):
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.production exec app \
+  node -e "
+const {Bot} = require('grammy');
+const bot = new Bot(process.env.BOT_TOKEN);
+const url = process.env.PUBLIC_URL + '/bot/' + process.env.BOT_TOKEN;
+bot.api.setWebhook(url, {drop_pending_updates: true})
+  .then(() => bot.api.getWebhookInfo())
+  .then(i => console.log('Webhook:', i.url));
+"
+```
+
+### Server SSH ulanish:
+```powershell
+ssh -o StrictHostKeyChecking=no -i "C:\Users\Hp\.ssh\oracle.key" ubuntu@92.5.5.101
+```
+
+---
+
 ## 🔜 Kelajakdagi kengaytmalar (ixtiyoriy)
 
 1. **Telegram Login Widget domen** — `@BotFather → /setdomain` production URL
