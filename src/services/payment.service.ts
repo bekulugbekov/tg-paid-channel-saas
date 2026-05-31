@@ -228,10 +228,11 @@ export class PaymentService {
   async getStatementTransactions(
     authHeader: string | undefined,
     fromMs: number,
-    toMs: number
+    toMs: number,
+    urlCreatorId?: string
   ) {
     const creators = await this.db.creator.findMany({
-      where: { paymeKeyEnc: { not: null } },
+      where: { paymeKeyEnc: { not: null }, ...(urlCreatorId ? { id: urlCreatorId } : {}) },
       select: { id: true, paymeKeyEnc: true },
     });
 

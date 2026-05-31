@@ -55,8 +55,8 @@ export function createServer(services: AppServices) {
   });
 
   // ── Payment webhooks (no auth) ───────────────────────────────────────────
-  app.use("/payments/payme", createPaymeRouter(paymentService));
-  app.use("/payments/click", createClickRouter(paymentService));
+  app.use("/payments/payme/:creatorId", createPaymeRouter(paymentService));
+  app.use("/payments/click/:creatorId", createClickRouter(paymentService));
 
   // ── REST API (/api/*) ────────────────────────────────────────────────────
   app.use("/api/auth",        createAuthRouter(db));

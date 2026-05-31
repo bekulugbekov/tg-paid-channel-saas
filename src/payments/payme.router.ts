@@ -38,9 +38,10 @@ function err(id: RpcId, e: { code: number; message: string }, data?: string) {
 }
 
 export function createPaymeRouter(svc: PaymentService): Router {
-  const router = Router();
+  const router = Router({ mergeParams: true });
 
   router.post("/", async (req: Request, res: Response) => {
+    const urlCreatorId: string = req.params["creatorId"];
     const body = req.body as Record<string, unknown> | undefined;
     const rpcId: RpcId = (body?.id as RpcId) ?? null;
 
@@ -65,6 +66,7 @@ export function createPaymeRouter(svc: PaymentService): Router {
           if (!txn) return res.json(err(rpcId, ERR.ORDER_NOT_FOUND));
 
           const creator = txn.subscription.plan.channel.creator;
+          if (creator.id !== urlCreatorId) return res.json(err(rpcId, ERR.AUTH_FAILED));
           if (!creator.paymeKeyEnc || !svc.verifyPaymeAuth(req.headers.authorization, creator.paymeKeyEnc)) {
             return res.json(err(rpcId, ERR.AUTH_FAILED));
           }
@@ -92,6 +94,7 @@ export function createPaymeRouter(svc: PaymentService): Router {
           const byPaymeId = await svc.findByProviderTxnId(Provider.PAYME, paymeId);
           if (byPaymeId) {
             const c = byPaymeId.subscription.plan.channel.creator;
+            if (c.id !== urlCreatorId) return res.json(err(rpcId, ERR.AUTH_FAILED));
             if (!c.paymeKeyEnc || !svc.verifyPaymeAuth(req.headers.authorization, c.paymeKeyEnc)) {
               return res.json(err(rpcId, ERR.AUTH_FAILED));
             }
@@ -110,6 +113,7 @@ export function createPaymeRouter(svc: PaymentService): Router {
           if (!txn) return res.json(err(rpcId, ERR.ORDER_NOT_FOUND));
 
           const creator = txn.subscription.plan.channel.creator;
+          if (creator.id !== urlCreatorId) return res.json(err(rpcId, ERR.AUTH_FAILED));
           if (!creator.paymeKeyEnc || !svc.verifyPaymeAuth(req.headers.authorization, creator.paymeKeyEnc)) {
             return res.json(err(rpcId, ERR.AUTH_FAILED));
           }
@@ -140,6 +144,7 @@ export function createPaymeRouter(svc: PaymentService): Router {
           if (!txn) return res.json(err(rpcId, ERR.TXN_NOT_FOUND));
 
           const creator = txn.subscription.plan.channel.creator;
+          if (creator.id !== urlCreatorId) return res.json(err(rpcId, ERR.AUTH_FAILED));
           if (!creator.paymeKeyEnc || !svc.verifyPaymeAuth(req.headers.authorization, creator.paymeKeyEnc)) {
             return res.json(err(rpcId, ERR.AUTH_FAILED));
           }
@@ -177,6 +182,7 @@ export function createPaymeRouter(svc: PaymentService): Router {
           if (!txn) return res.json(err(rpcId, ERR.TXN_NOT_FOUND));
 
           const creator = txn.subscription.plan.channel.creator;
+          if (creator.id !== urlCreatorId) return res.json(err(rpcId, ERR.AUTH_FAILED));
           if (!creator.paymeKeyEnc || !svc.verifyPaymeAuth(req.headers.authorization, creator.paymeKeyEnc)) {
             return res.json(err(rpcId, ERR.AUTH_FAILED));
           }
@@ -213,6 +219,7 @@ export function createPaymeRouter(svc: PaymentService): Router {
           if (!txn) return res.json(err(rpcId, ERR.TXN_NOT_FOUND));
 
           const creator = txn.subscription.plan.channel.creator;
+          if (creator.id !== urlCreatorId) return res.json(err(rpcId, ERR.AUTH_FAILED));
           if (!creator.paymeKeyEnc || !svc.verifyPaymeAuth(req.headers.authorization, creator.paymeKeyEnc)) {
             return res.json(err(rpcId, ERR.AUTH_FAILED));
           }
@@ -233,7 +240,7 @@ export function createPaymeRouter(svc: PaymentService): Router {
           const toMs   = Number(params.to);
           if (!fromMs || !toMs) return res.json(err(rpcId, ERR.INVALID_REQ));
 
-          const txns = await svc.getStatementTransactions(req.headers.authorization, fromMs, toMs);
+          const txns = await svc.getStatementTransactions(req.headers.authorization, fromMs, toMs, urlCreatorId);
           if (txns === null) return res.json(err(rpcId, ERR.AUTH_FAILED));
 
           return res.json(ok(rpcId, {

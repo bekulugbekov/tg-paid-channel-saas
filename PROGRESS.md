@@ -349,6 +349,29 @@ ssh -o StrictHostKeyChecking=no -i "C:\Users\Hp\.ssh\oracle.key" ubuntu@92.5.5.1
 
 ---
 
+## ✅ Bosqich 12 — Multi-tenant webhook routing audit (TUGALLANDI)
+
+### Tekshirildi va tuzatildi:
+
+| Band | Natija | Fayl |
+|------|--------|------|
+| 1 — Per-creator webhook URL | ✅ Tuzatildi | `server.ts` |
+| 2 — Creator URL'dan aniqlanib, o'sha kalit bilan auth | ✅ Tuzatildi | `payme.router.ts`, `click.router.ts` |
+| 3 — transactionId webhook'da qaytib kelishi | ✅ Allaqachon to'g'ri | `payment.service.ts:98,109` |
+| 4 — AES-256-GCM shifrlash | ✅ Allaqachon to'g'ri | `crypto.ts`, `settings.ts` |
+| 5 — Dashboard Settings'da webhook URL'lar | ✅ Tuzatildi | `Settings.tsx` |
+
+### O'zgartirilgan fayllar:
+- `src/api/server.ts` — `/payments/payme/:creatorId` va `/payments/click/:creatorId` route'lari
+- `src/payments/payme.router.ts` — `mergeParams: true`, har case'da `creator.id !== urlCreatorId` tekshiruvi
+- `src/payments/click.router.ts` — `mergeParams: true`, `resolve()` ga `urlCreatorId` parametri
+- `src/services/payment.service.ts` — `getStatementTransactions` optional `urlCreatorId` filter
+- `dashboard/src/pages/Settings.tsx` — Payme va Click webhook URL'lari + nusxalash tugmasi
+
+### Build: `tsc --noEmit` backend ✅, dashboard ✅
+
+---
+
 ## 🔜 Kelajakdagi kengaytmalar (ixtiyoriy)
 
 1. **Telegram Login Widget domen** — `@BotFather → /setdomain` production URL

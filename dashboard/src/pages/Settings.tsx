@@ -72,6 +72,35 @@ export default function Settings() {
         </div>
       )}
 
+      {/* Webhook URLs */}
+      {creator && (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-6">
+          <h3 className="font-semibold text-gray-700 mb-1">Webhook URL'lari</h3>
+          <p className="text-xs text-gray-400 mb-4">
+            Quyidagi URL'larni to'lov tizimi merchant panelida webhook sifatida kiriting.
+          </p>
+          <div className="space-y-3">
+            {[
+              { label: "Payme webhook URL", url: `${window.location.origin}/payments/payme/${creator.id}` },
+              { label: "Click Prepare URL", url: `${window.location.origin}/payments/click/${creator.id}/prepare` },
+              { label: "Click Complete URL", url: `${window.location.origin}/payments/click/${creator.id}/complete` },
+            ].map(({ label, url }) => (
+              <div key={label}>
+                <p className="text-xs text-gray-500 mb-1">{label}</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-3 py-2 break-all select-all">{url}</code>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(url)}
+                    className="shrink-0 text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-100 transition-colors"
+                    title="Nusxalash"
+                  >📋</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Merchant keys */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
         <h3 className="font-semibold text-gray-700 mb-1">Merchant kalitlari</h3>

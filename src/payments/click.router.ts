@@ -31,13 +31,14 @@ function fail(clickTransId: string, merchantTransId: string, code: number, note:
 }
 
 export function createClickRouter(svc: PaymentService): Router {
-  const router = Router();
+  const router = Router({ mergeParams: true });
 
-  // Shared: find transaction + extract decrypted secret
-  async function resolve(merchantTransId: string): Promise<{ txn: Awaited<ReturnType<typeof svc.getTransaction>>; secretKey: string | null }> {
+  // Shared: find transaction + validate creator + extract decrypted secret
+  async function resolve(merchantTransId: string, urlCreatorId: string): Promise<{ txn: Awaited<ReturnType<typeof svc.getTransaction>>; secretKey: string | null }> {
     const txn = await svc.getTransaction(merchantTransId);
     if (!txn) return { txn: null, secretKey: null };
     const creator = txn.subscription.plan.channel.creator;
+    if (creator.id !== urlCreatorId) return { txn: null, secretKey: null };
     if (!creator.clickSecretEnc) return { txn, secretKey: null };
     try {
       return { txn, secretKey: decrypt(creator.clickSecretEnc) };
@@ -64,7 +65,7 @@ export function createClickRouter(svc: PaymentService): Router {
       return res.json(fail(click_trans_id, merchant_trans_id, CE.ACTION_NOT_FOUND, "Action not found"));
     }
 
-    const { txn, secretKey } = await resolve(merchant_trans_id);
+    const { txn, secretKey } = await resolve(merchant_trans_id, req.params["creatorId"]);
     if (!txn) return res.json(fail(click_trans_id, merchant_trans_id, CE.TXN_NOT_FOUND, "Transaction not found"));
     if (!secretKey) return res.json(fail(click_trans_id, merchant_trans_id, CE.SIGN_FAILED, "Sign check failed"));
 
@@ -117,7 +118,7 @@ export function createClickRouter(svc: PaymentService): Router {
       return res.json(fail(click_trans_id, merchant_trans_id, CE.ACTION_NOT_FOUND, "Action not found"));
     }
 
-    const { txn, secretKey } = await resolve(merchant_trans_id);
+    const { txn, secretKey } = await resolve(merchant_trans_id, req.params["creatorId"]);
     if (!txn) return res.json(fail(click_trans_id, merchant_trans_id, CE.TXN_NOT_FOUND, "Transaction not found"));
     if (!secretKey) return res.json(fail(click_trans_id, merchant_trans_id, CE.SIGN_FAILED, "Sign check failed"));
 
