@@ -316,9 +316,9 @@ dashboard/{vite.config.ts,tailwind.config.js,tsconfig.json,package.json}
 
 ---
 
-## ✅ Bosqich 11 — Production server deploy (JARAYONDA)
+## ✅ Bosqich 11 — Production server deploy (TUGALLANDI)
 
-### Server holati (2026-05-31):
+### Server holati (2026-05-31) — TO'LIQ ISHGA TUSHDI:
 - **VPS**: Oracle Cloud Free Tier — Ubuntu 20.04, VM.Standard.E2.1.Micro, IP: `92.5.5.101`
 - **Domain**: `92-5-5-101.sslip.io` (bepul subdomen, Let's Encrypt SSL)
 - **Docker**: v28.1.1 o'rnatildi ✅
@@ -327,8 +327,9 @@ dashboard/{vite.config.ts,tailwind.config.js,tsconfig.json,package.json}
 - **Caddy container**: ✅ Ishlayapti — Let's Encrypt sertifikat olindi
 - **HTTPS**: ✅ `https://92-5-5-101.sslip.io` — `{"status":"ok"}` qaytaryapti
 - **HTTP→HTTPS redirect**: ✅ 308 Permanent Redirect
+- **Telegram webhook**: ✅ `https://92-5-5-101.sslip.io/bot/<token>` — o'rnatildi
 
-### ✅ Keyingi qadam — Webhook o'rnatish:
+### ✅ Webhook o'rnatildi:
 ```bash
 docker compose -f docker-compose.prod.yml --env-file .env.production exec app \
   node -e "
